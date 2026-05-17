@@ -55,21 +55,25 @@ __STATIC_INLINE__ int align_up(int n, int multiple) {
 }
 
 __STATIC_INLINE__ void ggml_log_callback_default(ggml_log_level level, const char* text, void*) {
+    // text has already been formatted by ggml; treat it as a literal string
+    // (NOT as a format string) so any '%' it contains is not re-interpreted
+    // by log_printf's vsnprintf -- a lone '%' (e.g. "MemoryLoad=42%") would
+    // otherwise pull garbage args off the stack and crash with c0000409.
     switch (level) {
         case GGML_LOG_LEVEL_DEBUG:
-            LOG_DEBUG(text);
+            LOG_DEBUG("%s", text);
             break;
         case GGML_LOG_LEVEL_INFO:
-            LOG_INFO(text);
+            LOG_INFO("%s", text);
             break;
         case GGML_LOG_LEVEL_WARN:
-            LOG_WARN(text);
+            LOG_WARN("%s", text);
             break;
         case GGML_LOG_LEVEL_ERROR:
-            LOG_ERROR(text);
+            LOG_ERROR("%s", text);
             break;
         default:
-            LOG_DEBUG(text);
+            LOG_DEBUG("%s", text);
     }
 }
 

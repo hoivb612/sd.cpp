@@ -1,0 +1,240 @@
+Concrete steps for Option 2a
+
+ # 1) Create the fork on GitHub
+ #    Either via web UI: ggml-org/ggml → Fork → hoivb612/ggml
+ #    Or via gh CLI:     gh repo fork ggml-org/ggml --org hoivb612 --clone=false
+ 
+ # 2) Inside the sd.cpp ggml submodule, re-point origin to your fork
+ cd d:\llama.cpp\sd.cpp\ggml
+ git remote set-url origin https://github.com/hoivb612/ggml.git
+ git remote add upstream https://github.com/ggml-org/ggml.git
+ git fetch upstream
+ git checkout -b sd-dx12 404fcb9d
+ git add .                # the dx12 / dx12x / CMake / header changes
+ git commit -m "Add DX12 backend (d3ddk + smosier flavors) for sd.cpp"
+ git push -u origin sd-dx12
+ 
+ # 3) Update sd.cpp to track the new URL + branch
+ cd d:\llama.cpp\sd.cpp
+ # Edit .gitmodules:
+ #   [submodule "ggml"]
+ #       path = ggml
+ #       url  = https://github.com/hoivb612/ggml.git
+ #       branch = sd-dx12
+ git submodule sync
+ git add .gitmodules ggml         # ggml entry now points at the new commit SHA on the fork
+ git add CMakeLists.txt src/ggml_extend.hpp
+ git commit -m "Switch ggml submodule to hoivb612 fork; add SD_DX12X option; harden log glue"
+ git push
+
+After that, anyone cloning sd.cpp runs git submodule update --init --recursive and gets the right ggml fork commit automatically.
+
+========================================================================
+
+The setup once Option 2a is in place
+
+Two repos, two histories that talk to each other:
+
+ upstream:  ggml-org/ggml ────────────● ─────────● ─────────● ──→  master moves forward
+                                      │           │           │
+                                   404fcb9d  (new commit)  (newer commit)
+                                      │
+ your fork: hoivb612/ggml ────────────●
+                                      └── sd-dx12 branch:
+                                           ●─●─● ← your DX12 commits
+ 
+ sd.cpp:    .gitmodules → hoivb612/ggml @ sd-dx12 branch
+            ggml submodule pinned to: <sha of latest sd-dx12 commit>
+
+What "sd.cpp pinning a newer ggml" looks like
+
+If sd.cpp upstream (leejet/stable-diffusion.cpp) bumps their ggml pointer from 404fcb9d → say b7a9c1d, two things happen on your side:
+
+ 1. They updated their .gitmodules (probably not — only the SHA in the submodule entry changes; URL stays ggml-org/ggml.git).
+ 2. They committed a new submodule pointer in their tree.
+
+When you merge their changes into your sd.cpp fork, you get a conflict on the ggml submodule pointer (or just a "new SHA" if you don't have local DX12 SHA committed there).
+
+The procedure: 3 small steps
+
+Step 1 — fast-forward your fork's master to mirror upstream ggml
+
+ cd d:\llama.cpp\sd.cpp\ggml
+ git fetch upstream                  # upstream = ggml-org/ggml
+ git checkout master
+ git merge --ff-only upstream/master # fast-forward
+ git push origin master              # update hoivb612/ggml master mirror
+
+Now your fork has the same master as upstream ggml.
+
+Step 2 — rebase your sd-dx12 branch on the new ggml commit
+
+ git checkout sd-dx12
+ git rebase b7a9c1d                  # the new SHA sd.cpp wants to track
+
+Three scenarios for the rebase outcome:
+
+ - (a) Clean rebase. Most likely. Your DX12 changes are confined to new files (ggml-dx12/, ggml-dx12x/, ggml-dx12.h) plus 3 small CMake hunks and 1 backend-registration line. Upstream is unlikely to touch any of those exact lines. You're done — git push --force-with-lease origin sd-dx12 and proceed to step
+  3.
+ - (b) Conflicts in CMakeLists.txt / ggml-backend-reg.cpp. Possible if upstream refactors option blocks or the backend registry. Resolve by hand — usually 5–10 lines of context drift. Push.
+ - (c) Conflicts in ggml-dx12 backend code. Only happens if upstream changes the ggml_backend_buffer_i / ggml_backend_i struct shape. We hit this already when porting from d3ddk — needed to strip set/get_tensor_2d_async fields. If upstream adds new fields, you'd need to add a nullptr initializer for each new slot. Mechanical, ~5 minutes per drift.
+
+Step 3 — bump sd.cpp's submodule pointer to your new tip
+
+ cd d:\llama.cpp\sd.cpp
+ cd ggml
+ git checkout sd-dx12               # now at the rebased tip
+ cd ..
+ git add ggml
+ git commit -m "Bump ggml submodule: rebase sd-dx12 onto upstream <new SHA>"
+ git push
+
+ Done.
+
+Routine maintenance cost
+
+For each upstream ggml bump:
+
+ - 30 seconds if rebase is clean (cases (a))
+ - 5 minutes if iface changes (case (c))
+ - ~10 minutes worst case if both upstream and you touched CMakeLists in overlapping spots (case (b))
+
+The reason this is cheap: our DX12 changes are additive (new files) and isolated (CMake option + one register_backend line). They don't reach into ggml internals — no patches to ggml.c, ggml-alloc.c, ggml-backend.cpp, etc.
+
+What if you ever want to merge upstream into sd-dx12 instead of rebasing?
+
+Also fine:
+
+ git checkout sd-dx12
+ git merge b7a9c1d
+ git push
+
+Merge vs rebase tradeoff:
+
+ - Rebase: keeps sd-dx12 history linear, easier to read, but rewrites SHAs (anyone cloning needs git pull --rebase or a fresh checkout).
+ - Merge: preserves SHAs, doesn't break others, but the branch history grows a "criss-cross" pattern of merges over time.
+
+For a personal fork with one consumer (sd.cpp), rebase is cleaner. For a fork with multiple downstream consumers, merge.
+
+Automating the bump (optional)
+
+If you do this often, a small script:
+
+ # scripts/bump-ggml.ps1
+ param([string]$NewSha)
+ cd $PSScriptRoot\..\ggml
+ git fetch upstream
+ git checkout master; git merge --ff-only upstream/master; git push origin master
+ git checkout sd-dx12
+ git rebase $NewSha
+ git push --force-with-lease origin sd-dx12
+ cd ..
+ git add ggml
+ git commit -m "Bump ggml: rebase sd-dx12 onto $NewSha"
+
+TL;DR
+
+When upstream sd.cpp bumps ggml to a newer commit:
+
+ 1. Mirror upstream ggml into your fork's master.
+ 2. Rebase sd-dx12 on the new commit.
+ 3. Update sd.cpp's submodule pointer.
+
+In practice, step 2 is the only one that can have surprises — and only when upstream changes 
+the backend ABI (rare; happens once every few months). When it does, the fix is mechanical 
+(add a nullptr for new iface fields). The DX12 implementation itself is decoupled enough that 
+ggml core changes rarely affect it.
+
+========================================================================
+
+Create the fork on GitHub. Easiest path:
+
+ https://github.com/ggml-org/ggml  →  "Fork"  →  Owner: hoivb612  →  Create fork
+
+Or with gh CLI:
+
+ gh repo fork ggml-org/ggml --org hoivb612 --clone=false --remote=false
+
+Result: https://github.com/hoivb612/ggml.git exists, with master mirroring upstream.
+
+Steps I do (once the fork is up)
+
+I'll walk through the exact commands so you can review and approve before I run them. I won't push anything to GitHub — only stage local commits — until you confirm.
+
+A. Re-point the ggml submodule's origin to your fork, keep upstream as a second remote
+
+ cd d:\llama.cpp\sd.cpp\ggml
+ git remote set-url origin https://github.com/hoivb612/ggml.git
+ git remote add upstream https://github.com/ggml-org/ggml.git
+ git fetch upstream   # so we have a reference baseline
+
+B. Create the sd-dx12 branch off the currently-pinned commit, commit our local changes
+
+ # we're sitting on detached HEAD at 404fcb9d with local mods
+ git checkout -b sd-dx12
+ 
+ # stage everything new + modified inside ggml
+ git add CMakeLists.txt
+ git add src/CMakeLists.txt
+ git add src/ggml-backend-reg.cpp
+ git add include/ggml-dx12.h
+ git add src/ggml-dx12/
+ git add src/ggml-dx12x/
+ 
+ git commit -m "Add DX12 backend (d3ddk + smosier flavors) for sd.cpp
+ 
+ - GGML_DX12 selects d3ddk flavor; GGML_DX12X selects smosier/xbox flavor
+ - mutually exclusive; both produce ggml-dx12.lib and define GGML_USE_DX12
+ - ggml_add_backend() remaps DX12X -> DX12 for the registration symbol
+ - DX12 buffer iface adds std::mutex around xfer cmd allocator/list/staging
+   to fix multithreaded model-load race (HRESULT 0x80004005)
+ - DX12 supports_op + dispatch loop add GGML_OP_TIMESTEP_EMBEDDING host
+   fallback for Stable Diffusion UNet correctness"
+
+C. Update sd.cpp's .gitmodules to track the fork + the sd-dx12 branch
+
+ cd d:\llama.cpp\sd.cpp
+ # Edit .gitmodules ggml entry:
+ #   url    = https://github.com/hoivb612/ggml.git
+ #   branch = sd-dx12
+ git submodule sync
+
+D. Commit sd.cpp-side changes (CMake toggles + log glue fix + submodule pointer)
+
+ git add .gitmodules
+ git add ggml                              # submodule pointer to new sha
+ git add CMakeLists.txt                    # SD_DX12X option
+ git add src/ggml_extend.hpp               # %s log format hardening
+ git commit -m "Switch ggml submodule to hoivb612 fork; add SD_DX12X; harden log glue"
+
+E. Push (only after you confirm)
+
+ # 1) push the fork branch
+ cd d:\llama.cpp\sd.cpp\ggml
+ git push -u origin sd-dx12
+ 
+ # 2) push sd.cpp
+ cd d:\llama.cpp\sd.cpp
+ git push
+
+Verification I'll run after each step
+
+After step D and before pushing:
+
+ git submodule status                  # confirm SHA matches our new commit
+ cd ggml && git log --oneline -5       # confirm sd-dx12 history is what we expect
+ git remote -v                         # confirm origin=fork, upstream=ggml-org
+
+And a fresh clone test (optional but recommended):
+
+ cd C:\Users\hoiv\scratch
+ git clone https://github.com/hoivb612/sd.cpp.git sd-cpp-test
+ cd sd-cpp-test
+ git submodule update --init --recursive
+ # verify ggml/src/ggml-dx12x exists
+
+Optional one-time helper
+
+I can drop scripts/bump-ggml.ps1 into sd.cpp right after step D so future upstream sync is a one-liner:
+
+ .\scripts\bump-ggml.ps1 <new-ggml-sha>
