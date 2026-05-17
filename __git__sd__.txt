@@ -238,3 +238,39 @@ Optional one-time helper
 I can drop scripts/bump-ggml.ps1 into sd.cpp right after step D so future upstream sync is a one-liner:
 
  .\scripts\bump-ggml.ps1 <new-ggml-sha>
+
+==========================================================
+
+REM TO DO after cloning and "git submodule update --init --recursive"
+
+C:\llama.cpp\sd.cpp\ggml>git branch --show-current
+
+C:\llama.cpp\sd.cpp\ggml>git status -sb
+## HEAD (no branch)
+
+C:\llama.cpp\sd.cpp\ggml>git log -1 --oneline
+4173da8e (HEAD, origin/ggml-dx12x) Add DX12 backend.
+
+C:\llama.cpp\sd.cpp\ggml>git fetch origin
+
+C:\llama.cpp\sd.cpp\ggml>git checkout ggml-dx12x
+branch 'ggml-dx12x' set up to track 'origin/ggml-dx12x'.
+Switched to a new branch 'ggml-dx12x'
+
+C:\llama.cpp\sd.cpp\ggml>git status
+On branch ggml-dx12x
+Your branch is up to date with 'origin/ggml-dx12x'.
+
+nothing to commit, working tree clean
+
+C:\llama.cpp\sd.cpp\ggml>git status -sb
+## ggml-dx12x...origin/ggml-dx12x
+
+C:\llama.cpp\sd.cpp\ggml>git branch --show-current
+ggml-dx12x
+
+C:\llama.cpp\sd.cpp\ggml>cd ..
+
+C:\llama.cpp\sd.cpp>notepad __git__sd__.txt
+
+C:\llama.cpp\sd.cpp>
