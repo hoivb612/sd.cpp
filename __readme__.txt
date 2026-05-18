@@ -16,7 +16,7 @@
 [DEBUG] stable-diffusion.cpp:338  - ggml tensor size = 400 bytes
 [DEBUG] clip_tokenizer.cpp:65   - vocab size: 49408
 [DEBUG] ggml_extend.hpp:2631 - clip params backend buffer size =  235.06 MB(VRAM) (196 tensors)
-[DEBUG] ggml_extend.hpp:2631 - unet params backend buffer size =  1640.25 MB(VRAM) (686 tensors)
+[DEBUG]ggml_extend.hpp:2631 - unet params backend buffer size =  1640.25 MB(VRAM) (686 tensors)
 [INFO ] stable-diffusion.cpp:640  - using VAE for encoding / decoding
 [INFO ] auto_encoder_kl.hpp:525  - vae decoder: ch = 128
 [DEBUG] ggml_extend.hpp:2631 - vae params backend buffer size =  94.47 MB(VRAM) (140 tensors)
@@ -171,3 +171,31 @@ C:\llama.cpp\sd.cpp\build.dxx>bin\RelWithDebInfo\sd-cli.exe -m d:\llama.cpp\mode
 C:\llama.cpp\sd.cpp\build.dxx>output.png
 
 C:\llama.cpp\sd.cpp\build.dxx>
+
+=======================================================
+
+D:\llama.cpp\models\SD>c:\llama.cpp\sd.cpp\build.dxx\bin\RelWithDebInfo\sd-cli.exe -M convert -m d:\llama.cpp\models\SD\LCM_PT -o gguf\LCM_Dreamshaper_v7-Q4_K.gguf  --type q4_K
+[INFO ] model.cpp:213  - load d:\llama.cpp\models\SD\LCM_PT using diffusers format
+[ERROR] model.cpp:299  - failed to open 'd:\llama.cpp\models\SD\LCM_PT/text_encoder_2/model.safetensors'
+[INFO ] convert.cpp:110  - model tensors mem size: 3022.13MB
+  |==============================>                   | 686/1130 - 833.24MB/s
+  |=========================================>        | 934/1130 - 868.64MB/s
+  |==================================================| 1130/1130 - 769.17MB/s
+[INFO ] model.cpp:999  - loading tensors completed, taking 5.29s (process: 0.00s, read: 0.42s, memcpy: 0.00s, convert: 3.52s, copy_to_backend: 0.00s)
+[INFO ] convert.cpp:75   - load tensors done
+[INFO ] gguf_io.cpp:116  - trying to save tensors to gguf\LCM_Dreamshaper_v7-Q4_K.gguf
+[INFO ] main.cpp:573  - convert 'd:\llama.cpp\models\SD\LCM_PT'/'' to 'gguf\LCM_Dreamshaper_v7-Q4_K.gguf' success
+
+
+D:\llama.cpp\models\SD>c:\llama.cpp\sd.cpp\build.dxx\bin\RelWithDebInfo\sd-cli.exe -M convert -m d:\llama.cpp\models\SD\LCM_PT -o gguf\LCM_Dreamshaper_v7-Q8_0.gguf  --type q8_0
+[INFO ] model.cpp:213  - load d:\llama.cpp\models\SD\LCM_PT using diffusers format
+[ERROR] model.cpp:299  - failed to open 'd:\llama.cpp\models\SD\LCM_PT/text_encoder_2/model.safetensors'
+[INFO ] convert.cpp:110  - model tensors mem size: 3073.88MB
+  |==============================>                   | 686/1130 - 49.34MB/s
+  |=========================================>        | 934/1130 - 49.53MB/s
+  |==================================================| 1130/1130 - 49.99MB/s
+[INFO ] model.cpp:999  - loading tensors completed, taking 81.36s (process: 0.00s, read: 78.57s, memcpy: 0.00s, convert: 0.07s, copy_to_backend: 0.00s)
+[INFO ] convert.cpp:75   - load tensors done
+[INFO ] gguf_io.cpp:116  - trying to save tensors to gguf\LCM_Dreamshaper_v7-Q8_0.gguf
+[INFO ] main.cpp:573  - convert 'd:\llama.cpp\models\SD\LCM_PT'/'' to 'gguf\LCM_Dreamshaper_v7-Q8_0.gguf' success
+
