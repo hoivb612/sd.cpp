@@ -120,3 +120,54 @@ DX12_DEC_COMPUTE — otherwise subsequent graph computes silently skip it.
 
   Purpose: Reduce peak VRAM. Trade-off: per-graph CPU→GPU copy of weights adds latency, especially for big models.
 
+===============================================
+
+C:\llama.cpp\sd.cpp\build.dxx>bin\RelWithDebInfo\sd-cli.exe -m d:\llama.cpp\models\SD\gguf\LCM_Dreamshaper_v7-f16.gguf -p "eerie treehouse in the wood" --sampling-method lcm --scheduler lcm --steps 5 --cfg-scale 1.0 --seed 63
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Memory architecture: UMA (host-shared, direct write enabled)
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Fused RMS_NORM blobs: using wave=64 variant
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Shader blobs: using wave=64 variant (device wave=64)
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Device 0: DX120 (AMD Radeon(TM) 8060S Graphics, VRAM: 64.9 GB, SM: 6.8, wave: 64, CV: no, WaveMMA: no, dp4a: yes)
+[WARN ] ggml_extend.hpp:70   - ggml-dx12: [dx12-os-mem:init-pc] device=DX120 GlobalMemoryStatusEx: TotalPhys=126615.8 MiB AvailPhys=107786.0 MiB MemoryLoad=14% TotalVirtual=134217727.9 MiB AvailVirtual=134213142.2 MiB
+[WARN ] ggml_extend.hpp:70   - ggml-dx12: [dx12-os-mem:init-pc] device=DX120 K32GetProcessMemoryInfo: WorkingSet=47.1 MiB PeakWS=47.1 MiB PrivateUsage=36.8 MiB PageFaults=20345
+[WARN ] ggml_extend.hpp:70   - ggml-dx12: [dx12-os-mem:init-pc] device=DX120 DXGI LOCAL: Budget=66454.2 MiB CurrentUsage=5.5 MiB AvailableForReservation=33355.1 MiB CurrentReservation=0.0 MiB
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Memory architecture: UMA (host-shared, direct write enabled)
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Fused RMS_NORM blobs: using wave=64 variant
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Shader blobs: using wave=64 variant (device wave=64)
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Device 1: DX121 (AMD Radeon(TM) 8060S Graphics, VRAM: 64.9 GB, SM: 6.8, wave: 64, CV: no, WaveMMA: no, dp4a: yes)
+[WARN ] ggml_extend.hpp:70   - ggml-dx12: [dx12-os-mem:init-pc] device=DX121 GlobalMemoryStatusEx: TotalPhys=126615.8 MiB AvailPhys=107765.2 MiB MemoryLoad=14% TotalVirtual=134217727.9 MiB AvailVirtual=134213018.4 MiB
+[WARN ] ggml_extend.hpp:70   - ggml-dx12: [dx12-os-mem:init-pc] device=DX121 K32GetProcessMemoryInfo: WorkingSet=67.5 MiB PeakWS=67.5 MiB PrivateUsage=64.4 MiB PageFaults=30703
+[WARN ] ggml_extend.hpp:70   - ggml-dx12: [dx12-os-mem:init-pc] device=DX121 DXGI LOCAL: Budget=66454.2 MiB CurrentUsage=10.9 MiB AvailableForReservation=33355.1 MiB CurrentReservation=0.0 MiB
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Found 2 D3D12 device(s)
+[INFO ] stable-diffusion.cpp:212  - loading model from 'd:\llama.cpp\models\SD\gguf\LCM_Dreamshaper_v7-f16.gguf'
+[INFO ] model.cpp:216  - load d:\llama.cpp\models\SD\gguf\LCM_Dreamshaper_v7-f16.gguf using gguf format
+[INFO ] stable-diffusion.cpp:305  - Version: SD 1.x
+[INFO ] stable-diffusion.cpp:333  - Weight type stat:                      f32: 703  |     f16: 428
+[INFO ] stable-diffusion.cpp:334  - Conditioner weight type stat:          f32: 122  |     f16: 74
+[INFO ] stable-diffusion.cpp:335  - Diffusion model weight type stat:      f32: 404  |     f16: 282
+[INFO ] stable-diffusion.cpp:336  - VAE weight type stat:                  f32: 176  |     f16: 72
+[INFO ] stable-diffusion.cpp:640  - using VAE for encoding / decoding
+[INFO ] auto_encoder_kl.hpp:525  - vae decoder: ch = 128
+  |==================================================| 1131/1131 - 4.29GB/s
+[INFO ] model.cpp:999  - loading tensors completed, taking 0.45s (process: 0.00s, read: 0.33s, memcpy: 0.00s, convert: 0.00s, copy_to_backend: 0.08s)
+[INFO ] stable-diffusion.cpp:873  - total params memory size = 1969.78MB (VRAM 1969.78MB, RAM 0.00MB): text_encoders 235.06MB(VRAM), diffusion_model 1640.25MB(VRAM), vae 94.47MB(VRAM), controlnet 0.00MB(VRAM), pmid 0.00MB(VRAM)
+[INFO ] stable-diffusion.cpp:931  - running in eps-prediction mode
+[INFO ] stable-diffusion.cpp:3367 - generate_image 512x512
+[INFO ] denoiser.hpp:539  - get_sigmas with LCM scheduler
+[INFO ] stable-diffusion.cpp:2814 - sampling using LCM method
+[INFO ] ggml_extend.hpp:67   - ggml-dx12: Auto-tune v9 loaded: Q4_K_dp4a=32t Q5_K_dp4a=32t F16_mr=256t (K>=0 uses 256t)
+[INFO ] stable-diffusion.cpp:3168 - get_learned_condition completed, taking 0.02s
+[INFO ] stable-diffusion.cpp:3401 - generating image: 1/1 - seed 63
+[WARN ] ggml_extend.hpp:70   - ggml-dx12: TIMESTEP_EMBEDDING: no GPU shader, computing on CPU and uploading (per graph)
+  |==================================================| 5/5 - 2.04it/s
+[INFO ] stable-diffusion.cpp:3432 - sampling completed, taking 2.47s
+[INFO ] stable-diffusion.cpp:3452 - generating 1 latent images completed, taking 2.48s
+[INFO ] stable-diffusion.cpp:3192 - decoding 1 latents
+[INFO ] stable-diffusion.cpp:3208 - latent 1 decoded, taking 1.82s
+[INFO ] stable-diffusion.cpp:3212 - decode_first_stage completed, taking 1.82s
+[INFO ] stable-diffusion.cpp:3591 - generate_image completed in 4.34s
+[INFO ] main.cpp:441  - save result image 0 to 'output.png' (success)
+[INFO ] main.cpp:490  - 1/1 images saved
+
+C:\llama.cpp\sd.cpp\build.dxx>output.png
+
+C:\llama.cpp\sd.cpp\build.dxx>
