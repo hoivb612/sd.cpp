@@ -274,3 +274,71 @@ C:\llama.cpp\sd.cpp\ggml>cd ..
 C:\llama.cpp\sd.cpp>notepad __git__sd__.txt
 
 C:\llama.cpp\sd.cpp>
+
+Cheat sheet for the team
+
+If anyone else clones sd.cpp from scratch and wants the smooth experience, the one-time bootstrap is:
+
+ git clone https://github.com/hoivb612/sd.cpp.git
+ cd sd.cpp
+
+ or 
+
+ cd sd.cpp
+ git pull
+
+ then:
+ 
+ git submodule update --init --recursive
+ git config submodule.ggml.update merge
+ git config submodule.recurse true
+ # optional: add upstream for ggml maintenance
+ cd ggml
+ git remote add upstream https://github.com/ggml-org/ggml.git
+
+
+=======================================================
+
+Every time updating GGML branch ggml-dx12x:
+
+ cd d:\llama.cpp\sd.cpp\ggml
+ 
+ # stage everything
+ git add src/ggml-dx12x/.
+ # or just: git add src/ggml-dx12x/
+ 
+ # commit (opens editor for message)
+ git commit
+ 
+ # push to fork
+ git push origin ggml-dx12x
+
+Then don't forget the second step — bump the submodule pointer in sd.cpp itself so this commit is what sd.cpp consumes:
+
+ cd d:\llama.cpp\sd.cpp
+ git add ggml           # records the new SHA on the ggml submodule
+ git commit -m "Bump ggml submodule: Q4_0 dp4a + tiled shaders"
+ git push
+
+-----------------
+
+┌──────────────────────────────────┬─────────────────────┐
+│ Source                           │ Has                 │
+├──────────────────────────────────┼─────────────────────┤
+│ hoivb612/ggml @ ggml-dx12x tip   │ The new commit      │
+├──────────────────────────────────┼─────────────────────┤
+│ sd.cpp/ggml/ (via submodule)     │ The previous commit │
+└──────────────────────────────────┴─────────────────────┘
+
+Both should be at the same SHA because we did both pushes. But this asymmetry can show up later.
+
+Verify they're aligned right now:
+
+ # What sd.cpp pins
+ cd d:\llama.cpp\sd.cpp
+ git ls-tree HEAD ggml
+>160000 commit 44c562db48749968864dce6e34abf4be7dc41771  ggml
+
+ # What the ggml-dx12x branch tip currently is on the fork
+ git ls-remote https://github.com/hoivb612/ggml.git refs/heads/ggml-dx12x
+>44c562db48749968864dce6e34abf4be7dc41771        refs/heads/ggml-dx12x
