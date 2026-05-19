@@ -320,6 +320,14 @@ Then don't forget the second step — bump the submodule pointer in sd.cpp itsel
  git commit -m "Bump ggml submodule: Q4_0 dp4a + tiled shaders"
  git push
 
+On another system:
+
+ cd <path-to>\sd.cpp
+ git pull
+ git submodule update --init --recursive    # picks up new ggml SHA
+ cd ggml
+ git checkout ggml-dx12x                     # re-attach if it went detached
+ 
 -----------------
 
 ┌──────────────────────────────────┬─────────────────────┐
